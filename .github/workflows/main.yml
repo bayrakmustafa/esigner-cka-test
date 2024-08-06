@@ -6,6 +6,9 @@ on:
 jobs:
   sign:
     name: Sign test
+    environment:
+      name: actions-code-signing
+
     runs-on: windows-latest
 
     needs: [ pre-build, build-web ]
@@ -13,7 +16,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install ESignerCKA Manually
-        if: ${{ matrix.esigner }}
         shell: powershell
         run: |
           # download installer
@@ -38,7 +40,6 @@ jobs:
           WIN_ESIGNER_TOTP_SECRET: ${{ secrets.WIN_ESIGNER_TOTP_SECRET }}
 
       - name: list certificates
-        if: ${{ matrix.esigner }}
         shell: powershell
         run: |
           Get-ChildItem Cert:\CurrentUser\My | Select Thumbprint
