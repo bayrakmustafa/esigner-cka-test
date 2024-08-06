@@ -1,0 +1,58 @@
+name: Publish (GUI)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  sign:
+    name: Sign test
+    runs-on: windows-latest
+
+    needs: [ pre-build, build-web ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ESignerCKA Manually
+        if: ${{ matrix.esigner }}
+        shell: powershell
+        run: |
+          # download installer
+          Invoke-WebRequest -OutFile eSigner_CKA_Setup.zip "https://github.com/SSLcom/eSignerCKA/releases/download/v1.0.6/SSL.COM-eSigner-CKA_1.0.6.zip"
+          Expand-Archive -Force eSigner_CKA_Setup.zip
+          Remove-Item eSigner_CKA_Setup.zip
+          Move-Item -Destination "eSigner_CKA_Installer.exe" -Path "eSigner_CKA_*\*.exe"
+          
+          
+          New-Item -ItemType Directory -Force -Path $env:INSTALL_DIR
+          ./eSigner_CKA_Installer.exe /CURRENTUSER /VERYSILENT /SUPPRESSMSGBOXES /DIR="$env:INSTALL_DIR" | Out-Null
+          & "$env:INSTALL_DIR/eSignerCKATool.exe" config -mode $env:WIN_ESIGNER_MODE -user "$env:WIN_ESIGNER_USERNAME" -pass "$env:WIN_ESIGNER_PASSWORD" -totp "$env:WIN_ESIGNER_TOTP_SECRET" -key "$env:MASTER_KEY_FILE" -r
+
+          & "$env:INSTALL_DIR/eSignerCKATool.exe" unload
+          & "$env:INSTALL_DIR/eSignerCKATool.exe" load
+        env:
+          INSTALL_DIR: ${{ github.workspace }}/eSignerCKA
+          MASTER_KEY_FILE: ${{ github.workspace }}/eSignerCKA/master.key
+          WIN_ESIGNER_MODE: ${{ vars.WIN_ESIGNER_MODE }}
+          WIN_ESIGNER_USERNAME: ${{ secrets.WIN_ESIGNER_USERNAME }}
+          WIN_ESIGNER_PASSWORD: ${{ secrets.WIN_ESIGNER_PASSWORD }}
+          WIN_ESIGNER_TOTP_SECRET: ${{ secrets.WIN_ESIGNER_TOTP_SECRET }}
+
+      - name: list certificates
+        if: ${{ matrix.esigner }}
+        shell: powershell
+        run: |
+          Get-ChildItem Cert:\CurrentUser\My | Select Thumbprint
+          echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" /?
+          certutil -csptest -csp "eSignerKSP"
+          certutil -user -store my 0D17F6395EC64A2B1D341BB7AC5B3163EB148BB7
+
+      - name: Sign
+        shell: powershell
+        run: |
+          signtool sign /debug /fd sha256 /sha1 0D17F6395EC64A2B1D341BB7AC5B3163EB148BB7 /d ALCOM /tr http://ts.ssl.com /td sha256 test.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test.exe
+          path: test.exe
