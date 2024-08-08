@@ -56,3 +56,15 @@ jobs:
         with:
           name: test.exe
           path: test.exe
+
+      - name: cooy log files
+        if: always()
+        shell: powershell
+        run:
+          # copy %appdata%\eSignerCKA to workspace
+          Copy-Item -Path "$env:APPDATA\eSignerCKA" -Destination "logs\eSignerCKA" -Recurse
+      - name: upload log files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
