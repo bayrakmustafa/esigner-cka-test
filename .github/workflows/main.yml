@@ -45,12 +45,12 @@ jobs:
           echo "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           & "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe" /?
           certutil -csptest -csp "eSignerKSP"
-          certutil -user -store my 0D17F6395EC64A2B1D341BB7AC5B3163EB148BB7
+          certutil -user -store my 247D3EE6F29D11968B33B29A23063F3721ADC3E4
 
       - name: Sign
         shell: powershell
         run: |
-          signtool sign /debug /fd sha256 /sha1 0D17F6395EC64A2B1D341BB7AC5B3163EB148BB7 /d ALCOM /tr http://ts.ssl.com /td sha256 test.exe
+          signtool sign /debug /fd sha256 /sha1 247D3EE6F29D11968B33B29A23063F3721ADC3E4 /d ALCOM /tr http://ts.ssl.com /td sha256 test.exe
 
       - uses: actions/upload-artifact@v4
         with:
