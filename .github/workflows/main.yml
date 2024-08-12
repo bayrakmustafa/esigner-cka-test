@@ -33,7 +33,7 @@ jobs:
         env:
           INSTALL_DIR: ${{ github.workspace }}/eSignerCKA
           MASTER_KEY_FILE: ${{ github.workspace }}/eSignerCKA/master.key
-          WIN_ESIGNER_MODE: ${{ vars.WIN_ESIGNER_MODE }}
+          WIN_ESIGNER_MODE: ${{ secrets.WIN_ESIGNER_MODE }}
           WIN_ESIGNER_USERNAME: ${{ secrets.WIN_ESIGNER_USERNAME }}
           WIN_ESIGNER_PASSWORD: ${{ secrets.WIN_ESIGNER_PASSWORD }}
           WIN_ESIGNER_TOTP_SECRET: ${{ secrets.WIN_ESIGNER_TOTP_SECRET }}
